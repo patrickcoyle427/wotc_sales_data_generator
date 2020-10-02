@@ -25,9 +25,9 @@ USAGE:
 '''
 
 #TO DO
-# Load in template xlsx file
-# Check test xlsx load.py to see how to implement it into the main code
-# Write data to a copy of the template
+
+# Move Files on completion
+# Error handing when there is user input
 
 import csv, os, os.path, shutil
 
@@ -96,38 +96,23 @@ def pull_data(names):
     # Takes the data from each CSV and loads it into memory to merged and written
     # to a single .xlsx file.
 
+    # names - the file names of each file that needs to be parsed
+
     wotc_id = '5676'
     # Alternate Universes's wotc ID
     # WOTC ID number is the first column in the spreadsheet that will be written
 
-    data = []
-
-    master_upc = {}
-    
     new_upcs = {}
     new_upcs_added = False
     # When new_upcs is set to true, the wotc_master_upc.csv file gets created if it doesn't exist
     # or appended if it already does
 
-    # TODO: Move loading previous UPCs to its own function
+    data = []
 
-    if os.path.exists('wotc_master_upc.csv'):
+    master_upc = load_master_upc()
+    # load_master_upc() loads all previously recorded UPCs
 
-        # Loads up previously used UPCs so the user doesn't have to enter them multiple times
-
-        with open('wotc_master_upc.csv', newline='') as known_upcs:
-
-           upc_reader = csv.reader(known_upcs)
-
-           next(upc_reader, None)
-           # Skips the header line
-
-           for row in upc_reader:
-
-               loaded_prod = row[0]
-               loaded_upc = row[1]
-
-               master_upc[loaded_prod] = loaded_upc
+    user_upc = ''
 
     for file in names:
 
@@ -153,13 +138,32 @@ def pull_data(names):
                 
                     # ask user for upc
 
-                    user_upc = input(f'What is the UPC of {prod_name}?\n>  ')
+                    while user_upc == '':
+
+                        # prevents the user from accidently inputing a blank line
+
+                        try:
+
+                            user_upc = input(f'What is the UPC of {prod_name}?\n>  ')
+
+                            # To DO: Let the user Type DELETE to remove the item record
+
+                        except KeyboardInterrupt:
+
+                            print('\nPlease Enter a upc')
+
+                            continue
+
+                
 
                     new_upcs[prod_name] = user_upc
 
                     new_upcs_added = True
 
-                    #TO DO: Add error handling
+                    upc = user_upc
+
+                    user_upc = ''
+                    # resets the user UPC
                 
                 else:
 
@@ -175,14 +179,51 @@ def pull_data(names):
 
     if new_upcs_added:
 
-        status = export_upcs_to_csv(new_upcs)
+        status = export_new_upcs(new_upcs)
 
         if status:
 
             print('wotc_master_upcs.csv successfully updated')
 
+    move_parsed_files(names)
 
     return data
+
+def move_parsed_files(names):
+
+    # Moves files that were parsed for the report to a new folder so the user knows they've been scanned
+
+    # names - a list of file names that have been parsed
+
+    for file in names:
+
+        os.replace(f'to_parse/{file}',  f'parsed_files/{file}')
+
+def load_master_upc():
+
+    # Loads the master UPC file data, used for checking previously recorded UPCs
+    # returns master_upcs, which is a dictionary with all the previously recorded UPCs
+    
+    master_upc = {}
+    
+    if os.path.exists('wotc_master_upc.csv'):
+
+        with open('wotc_master_upc.csv', newline='') as known_upcs:
+
+           upc_reader = csv.reader(known_upcs)
+
+           next(upc_reader, None)
+           # Skips the header line
+
+           for row in upc_reader:
+
+               loaded_prod = row[0]
+               loaded_upc = row[1]
+
+               master_upc[loaded_prod] = loaded_upc
+
+    return master_upc
+    
 
 def generate_report(data):
 
@@ -253,7 +294,7 @@ def generate_report(data):
 
     return True
     
-def export_upcs_to_csv(upc_dict):
+def export_new_upcs(upc_dict):
 
     # Exports the UPC dict to be used on subsequent runs of the script.
     # Will only export if new changes are made.
