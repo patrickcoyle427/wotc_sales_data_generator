@@ -10,6 +10,20 @@ Of the Coast needs, then writes them to an xlsx file that can be sent for report
 
 USAGE:
 
+- REQUIRED DATA: Sales by line exported to .csv files in Lightspeed Retail for the month
+  you wish to parse. You will need 2 .csv files to cover all the data needed by wotc, one for
+  the mtg tag and one for dnd and exclude minis (they aren't made by wotc so they aren't
+  included)
+
+  These required files can be found the following way
+  1. Go to Reports
+  2. Go to Lines
+  3. Change Shop to Blue Bell
+  4. Change the dates to all those in the month you wish to scan
+  5. Use the tags to filter results (mtg for Magic: The gathering, dnd for Dungeons and Dragons)
+  6. Search each tag one at a time and export the results, the export button is on the
+      right side of the Lines screen
+  
 - On first run of this script, two directories will be created in the same directory as this
   file: to_parse and parsed_data
 
@@ -26,8 +40,12 @@ USAGE:
 
 #TO DO
 
-# Move Files on completion
-# Error handing when there is user input
+# More error handing when there is user input
+# More error handing when files are read or created
+# Add the ability to type delte for a UPC and have the parser skip over it
+#   When the report is written
+# Maybe change the output format to .csv instead of .xlsx to cut down
+#   on imported moduals
 
 import csv, os, os.path, shutil
 
@@ -175,7 +193,9 @@ def pull_data(names):
 
                         upc = master_upc[prod_name]
 
-                data.append((wotc_id, transaction_date, transaction_id, upc, prod_name, qty, retail_cost, subtotal))
+                if upc.lower() != 'delete':
+
+                    data.append((wotc_id, transaction_date, transaction_id, upc, prod_name, qty, retail_cost, subtotal))
 
     if new_upcs_added:
 
