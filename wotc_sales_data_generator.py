@@ -42,8 +42,6 @@ USAGE:
 
 # More error handing when there is user input
 # More error handing when files are read or created
-# Add the ability to type delte for a UPC and have the parser skip over it
-#   When the report is written
 # Maybe change the output format to .csv instead of .xlsx to cut down
 #   on imported moduals
 
@@ -68,16 +66,53 @@ def start_parse():
 
     if dir_exist:
 
+        store_info = choose_profile()
+
         findings = find_csv_names()
 
-        pulled_data = pull_data(findings)
+        pulled_data = pull_data(findings, store_info)
 
-        generated_report = generate_report(pulled_data)
+        generated_report = generate_report(pulled_data, store_info)
 
         if generated_report:
 
             print('Report successfully generated')
 
+def choose_profile():
+
+    # Pick which location you are generating a report for. Returns a tuple with the store name
+    # and store ID number, the number you get when you are a premium store. These modify the fil
+    # name and the store ID number column in the generated data.
+
+    choice = ''
+    store_id = ''
+    store_name = ''
+
+    print('Which store is this report for? Enter the number for your choice')
+
+    while choice != '1' and choice != '2':
+    
+        print('1. Alternate Universes East Norriton')
+        print('2. Alternate Universes Wilmington')
+        choice = input('> ')
+
+        if choice == '1':
+
+            print('/nEast Norriton profilSe loaded!\n')
+            
+            store_id = '5676'
+            store_name = 'AlternateUniversesEastNorriton'
+
+        elif choice == '2':
+
+            print('\nWilmington profile loaded!\n')
+
+            store_id = ''
+            store_name = 'AlternateUniversesWilmington'
+
+
+    return (store_id, store_name)
+        
 def dir_check():
 
     # Will create necessary directories on first launch of script,
@@ -109,15 +144,17 @@ def find_csv_names():
     
     return [file for file in os.listdir('to_parse') if file.endswith('.csv')]
 
-def pull_data(names):
+def pull_data(names, store_profile):
 
     # Takes the data from each CSV and loads it into memory to merged and written
     # to a single .xlsx file.
 
     # names - the file names of each file that needs to be parsed
+    # store_profile - a tuple created in the choose_profile function that contains the store ID number
+    #                 at [0] and the store name at [1]
 
-    wotc_id = '5676'
-    # Alternate Universes's wotc ID
+    wotc_id = store_profile[0]
+    # Alternate Universes's wotc ID, this number can be found in the choose_profile function
     # WOTC ID number is the first column in the spreadsheet that will be written
 
     new_upcs = {}
@@ -245,12 +282,15 @@ def load_master_upc():
     return master_upc
     
 
-def generate_report(data):
+def generate_report(data, store_profile):
 
     # Loads the template file, writes data to a copy of it and then saves it in the format that WOTC requires
 
     # data - table that contains tuples with all the information to go onto the report in the correct order
     #        that was created in the pull_data function.
+
+    # store_profile - a tuple created in the choose_profile function that contains the store ID number
+    #                 at [0] and the store name at [1]
 
     if os.path.exists('wotc_report_template.xlsx'):
 
@@ -280,7 +320,7 @@ def generate_report(data):
             month = f'0{month}'
             # wotc file formatting requires the month to have a 0 if necessary
 
-        new_data_name = f'NEW_5676_AlternateUniversesEastNorriton_POSdata_{month}{year}.xlsx'
+        new_data_name = f'NEW_{store_profile[0]}_{store_profile[1]}_POSdata_{month}{year}.xlsx'
 
         shutil.copy('wotc_report_template.xlsx', new_data_name)        
 
