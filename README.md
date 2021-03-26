@@ -3,6 +3,8 @@
 Takes a CSV from lightspeed retail POS, pulls out the sales information that Wizards
 Of the Coast needs, then writes them to an xlsx file that can be sent for reporting.
 
+Now supports multiple stores!
+
 -Written by Patrick Coyle
 
 # USAGE:
