@@ -87,10 +87,11 @@ def choose_profile():
     choice = ''
     store_id = ''
     store_name = ''
+    options = ('1', '2')
 
     print('Which store is this report for? Enter the number for your choice')
 
-    while choice != '1' and choice != '2':
+    while choice not in options:
     
         print('1. Alternate Universes East Norriton')
         print('2. Alternate Universes Wilmington')
@@ -98,7 +99,7 @@ def choose_profile():
 
         if choice == '1':
 
-            print('/nEast Norriton profilSe loaded!\n')
+            print('\nEast Norriton profile loaded!\n')
             
             store_id = '5676'
             store_name = 'AlternateUniversesEastNorriton'
@@ -157,6 +158,9 @@ def pull_data(names, store_profile):
     # Alternate Universes's wotc ID, this number can be found in the choose_profile function
     # WOTC ID number is the first column in the spreadsheet that will be written
 
+    currency = 'USD'
+    # Currency used in your country, in the author's case, that is USD
+
     new_upcs = {}
     new_upcs_added = False
     # When new_upcs is set to true, the wotc_master_upc.csv file gets created if it doesn't exist
@@ -201,7 +205,8 @@ def pull_data(names, store_profile):
 
                             user_upc = input(f'What is the UPC of {prod_name}?\n>  ')
 
-                            # To DO: Let the user Type DELETE to remove the item record
+                            # user can typle delete to have that item skipped
+
 
                         except KeyboardInterrupt:
 
@@ -232,7 +237,7 @@ def pull_data(names, store_profile):
 
                 if upc.lower() != 'delete':
 
-                    data.append((wotc_id, transaction_date, transaction_id, upc, prod_name, qty, retail_cost, subtotal))
+                    data.append((wotc_id, transaction_date, transaction_id, upc, prod_name, qty, retail_cost, subtotal, currency))
 
     if new_upcs_added:
 
@@ -292,9 +297,12 @@ def generate_report(data, store_profile):
     # store_profile - a tuple created in the choose_profile function that contains the store ID number
     #                 at [0] and the store name at [1]
 
+    store_id = store_profile[0]
+    store_name = store_profile[1]
+
     if os.path.exists('wotc_report_template.xlsx'):
 
-        column_letters = ('A', 'B', 'C', 'E', 'I', 'J', 'K', 'L')
+        column_letters = ('A', 'B', 'C', 'E', 'I', 'J', 'K', 'L', 'M')
         # Letters of the columns used
 
         today = datetime.today()
@@ -320,7 +328,7 @@ def generate_report(data, store_profile):
             month = f'0{month}'
             # wotc file formatting requires the month to have a 0 if necessary
 
-        new_data_name = f'NEW_{store_profile[0]}_{store_profile[1]}_POSdata_{month}{year}.xlsx'
+        new_data_name = f'NEW_{store_id}_{store_name}_POSdata_{month}{year}.xlsx'
 
         shutil.copy('wotc_report_template.xlsx', new_data_name)        
 
@@ -330,7 +338,6 @@ def generate_report(data, store_profile):
         print('as "wotc_sales_data_generator.py"!')
 
         return False
-
 
     wb = load_workbook(filename=new_data_name)
 
