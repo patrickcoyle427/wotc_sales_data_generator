@@ -193,6 +193,14 @@ def pull_data(names, store_profile):
 
                 upc = ''
 
+                find_paren = prod_name.find('(')
+
+                if find_paren != -1:
+
+                    prod_name = prod_name[:find_paren].strip()
+
+                    # Removes parenthesis found in names of products
+
                 if prod_name not in new_upcs and prod_name not in master_upc:
                 
                     # ask user for upc
